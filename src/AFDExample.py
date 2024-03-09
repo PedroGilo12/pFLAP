@@ -8,15 +8,10 @@ states = {
     "qf": StateMachine.State("qf", [("qf", "A", "qf"), ("qf", "B", "qf")])
 }
 
-stateMachine = StateMachine.StateMachine(states, states["q0"], ["qf"])
-
-# Fita de entrada
-input_row = 'ABABABABABABABABABABA'
-signals = list(input_row)
-
-print(f"fita de entrada: {input_row}")
+machine = StateMachine.FiniteStateMachine(states, states["q0"], ["qf"])
+signals = list("ABABBABABAB")
 
 for signal in signals:
-    stateMachine.process(signal)
+    machine.process_symbol(signal)
     
-print(stateMachine.final())
+print(machine.result())
