@@ -57,22 +57,3 @@ class StateMachine:
             
     def final(self):
         return self._current_state.get_name() in self._final_states
-
-states = {
-    "q0": State("q0", [("q0", "A", "q1"), ("q0", "B", "q2")]),
-    "q1": State("q1", [("q1", "B", "q2"), ("q1", "A", "qf")]),
-    "q2": State("q2", [("q2", "A", "q1"), ("q2", "B", "qf")]),
-    "qf": State("qf", [("qf", "A", "qf"), ("qf", "B", "qf")])
-}
-
-stateMachine = StateMachine(states, states["q0"], ["qf"])
-
-input_row = 'ABABABBABABABABABABABA'
-signals = list(input_row)
-
-print(f"fita de entrada: {input_row}")
-
-for signal in signals:
-    stateMachine.process(signal)
-    
-print(stateMachine.final())
