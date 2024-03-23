@@ -1,4 +1,4 @@
-import tkinter as tk
+from tkinter import *
 import customtkinter as ctk
 from CTkMenuBar import *
 
@@ -6,38 +6,55 @@ class StartPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
         
-        screen_width = 50
+        screen_width = 40
         screen_height = 691
 
-        self.label_side_bar = ctk.CTkLabel(self, width=screen_width, height=screen_height)
-        self.label_side_bar.grid(row=0, column=1, sticky="nsew")
-        
-        self.container_buttons = ctk.CTkFrame(self.label_side_bar, width=screen_width, height=screen_height)
-        self.container_buttons.grid(row=0, column=0, sticky="nsew")
+        self.label_side_bar = ctk.CTkLabel(self, width=screen_width, height=screen_height, text="")
+        self.label_side_bar.grid(row=0, column=0)
 
-        self.grid_rowconfigure(0, weight=1)  # Para preencher a largura da janela
-        self.grid_columnconfigure(0, weight=1)  # Para pree
+        button_width = 20
+        button_height = 20
 
-        button_width = 2
-        button_height = 10
+        self.label_txt = ctk.CTkLabel(self.label_side_bar, text="Editor", height= button_height, width= button_width, font=("Helvetica", 12),anchor="e")
+        self.label_txt.place(relx=0.1, rely=0.05, anchor="w")
 
-        self.Button_attribute_edition = ctk.CTkButton(self.container_buttons, width=10, height=button_height)
-        self.Button_attribute_edition.place(relx=0, rely=0.13, anchor="w")
+        icon_edition = PhotoImage(file="Imagens/20240322_203742.png")
+        icon_edition = icon_edition.subsample(2, 2)
+        self.Button_attribute_edition = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
+                                                      fg_color="transparent", image=icon_edition, compound="right")
+        self.Button_attribute_edition.place(relx=0.03, rely=0.13, anchor="w")
         
-        self.Button_state_creator = ctk.CTkButton(self.container_buttons, width=button_width, height=button_height)
-        self.Button_state_creator.place(relx=0, rely=0.20, anchor="w")
+        icon_state_creator = PhotoImage(file="Imagens/20240322_210027.png")
+        icon_state_creator = icon_state_creator.subsample(2, 2)
+        self.Button_state_creator = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
+                                                      fg_color="transparent", image=icon_state_creator, compound="right")
+        self.Button_state_creator.place(relx=0, rely=0.23, anchor="w")
         
-        self.Button_transition_creator = ctk.CTkButton(self.container_buttons, width=button_width, height=button_height)
-        self.Button_transition_creator.place(relx=0, rely=0.27, anchor="w")
+        icon_transition_creator = PhotoImage(file="Imagens/20240322_210202.png")
+        icon_transition_creator = icon_transition_creator.subsample(2, 2)
+        self.Button_transition_creator = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
+                                                      fg_color="transparent", image=icon_transition_creator, compound="right")
+        self.Button_transition_creator.place(relx=0, rely=0.33, anchor="w")
         
-        self.Button_deleter = ctk.CTkButton(self.container_buttons, width=button_width, height=button_height)
-        self.Button_deleter.place(relx=0, rely=0.34, anchor="w")
+        icon_deleter = PhotoImage(file="Imagens/20240322_193952.png")
+        imagem_reduzida = icon_deleter.subsample(2, 2)
+        self.Button_deleter = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, fg_color="transparent", 
+                                            image=imagem_reduzida, compound="left")
+        self.Button_deleter.place(relx=0.03, rely=0.43, anchor="w")
         
-        self.Button_undoer = ctk.CTkButton(self.container_buttons, width=button_width, height=button_height)
-        self.Button_undoer.place(relx=0, rely=0.41, anchor="w")
+        icon_undoer = PhotoImage(file="Imagens/20240322_210234.png")
+        icon_undoer = icon_undoer.subsample(2, 2)
+        self.Button_undoer = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
+                                                      fg_color="transparent", image=icon_undoer, compound="right")
+        self.Button_undoer.place(relx=0, rely=0.53, anchor="w")
         
-        self.Button_remake = ctk.CTkButton(self.container_buttons, width=button_width, height=button_height)
-        self.Button_remake.place(relx=0, rely=0.48, anchor="w")
+        
+        icon_remake = PhotoImage(file="Imagens/20240322_211523.png")
+        icon_remake = icon_remake.subsample(2, 2)
+        self.Button_remake = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
+                                                      fg_color="transparent", image=icon_remake, compound="right")
+        self.Button_remake.place(relx=0, rely=0.63, anchor="w")
+
 
 class App(ctk.CTk):
      
@@ -46,19 +63,20 @@ class App(ctk.CTk):
          
         self.screen_width = int(0.8 * self.winfo_screenwidth())
         self.screen_height = int(0.8 * self.winfo_screenheight())
+        self.title("pFLAP")
+        icon_path = "Imagens/20240322_210027.png"
+        icon = PhotoImage(file=icon_path)
+        self.iconphoto(True, icon)
         
         print("Screen size: ", self.screen_width, "x", self.screen_height)
         
         self.geometry(f"{self.screen_width}x{self.screen_height}")
         self.resizable(True, True)
-        
-        self.filename = ""
 
         menu = CTkMenuBar(self)
         button_1 = menu.add_cascade("File")
-        button_2 = menu.add_cascade("Edit")
-        button_3 = menu.add_cascade("Settings")
-        button_4 = menu.add_cascade("About")
+        button_2 = menu.add_cascade("Test")
+        button_3 = menu.add_cascade("Help")
 
         dropdown1 = CustomDropdownMenu(widget=button_1)
         dropdown1.add_option(option="Open", command=lambda: print("Open"))
@@ -78,9 +96,6 @@ class App(ctk.CTk):
         dropdown3 = CustomDropdownMenu(widget=button_3)
         dropdown3.add_option(option="Preferences",command=lambda: print("Open"))
         dropdown3.add_option(option="Update",command=lambda: print("Open"))
-
-        dropdown4 = CustomDropdownMenu(widget=button_4)
-        dropdown4.add_option(option="Hello World",command=lambda: print("Open"))
         
         container = ctk.CTkFrame(self)  
         container.pack(side="top", fill="both", expand=True) 
@@ -98,7 +113,6 @@ class App(ctk.CTk):
         frame = self.frames[cont]
         frame.tkraise()
 
-        
     def get_screen_width(self):
         return self.screen_width
     
