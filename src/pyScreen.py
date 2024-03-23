@@ -7,6 +7,8 @@ import os
 import pygame
 import tela
 import JFLAPimport as jf
+from CTkMenuBar import *
+from tkinter import messagebox
 
 LARGEFONT =("Verdana", 35)
 
@@ -14,125 +16,210 @@ class App(ctk.CTk):
      
     def __init__(self, *args, **kwargs): 
         ctk.CTk.__init__(self, *args, **kwargs)
-        pygame.init()
+        
+        self.opened_file = ""
+        self.flag_new = False 
+        self.running = True
          
         self.screen_width = int(0.8 * self.winfo_screenwidth())
         self.screen_height = int(0.8 * self.winfo_screenheight())
+        self.title("pFLAP")
+        icon_path = "Imagens/20240322_210027.png"
+        icon = tk.PhotoImage(file=icon_path)
+        self.iconphoto(True, icon)
         
         print("Screen size: ", self.screen_width, "x", self.screen_height)
         
         self.geometry(f"{self.screen_width}x{self.screen_height}")
-        self.resizable(False, False)
-        
-        self.filename = ""
+        self.resizable(True, True)
+
+        menu = CTkMenuBar(self)
+        button_1 = menu.add_cascade("File")
+        button_2 = menu.add_cascade("Test")
+        button_3 = menu.add_cascade("Help")
+
+        dropdown1 = CustomDropdownMenu(widget=button_1)
+        dropdown1.add_option(option="New (Ctrl+N)", command=lambda: self.new(self.screen_width, self.screen_height))
+        dropdown1.add_option(option="Open (Ctrl+O)", command=lambda: self.open_jff())
+        dropdown1.add_option(option="Save (Ctrl+S)",command=lambda: self.save())
+        dropdown1.add_option(option="Save As (Ctrl+Shift+S) ",command=lambda: self.save_as_jff())
+
+        dropdown1.add_separator()
+
+        sub_menu = dropdown1.add_submenu("Export As")
+        sub_menu.add_option(option=".PNG",command=lambda: self.export_jpg())
+
+        dropdown2 = CustomDropdownMenu(widget=button_2)
+        dropdown2.add_option(option="Multiple Run",command=lambda: print("Open"))
+        dropdown2.add_option(option="Step by Step",command=lambda: print("Open"))
+
+        dropdown3 = CustomDropdownMenu(widget=button_3)
+        dropdown3.add_option(option="Help", command=lambda: print("Open"))
+        dropdown3.add_option(option="About...",command=lambda: print("Open"))
         
         container = ctk.CTkFrame(self)  
-        container.pack(side = "top", fill = "both", expand = True) 
-  
-        container.grid_rowconfigure(0, weight = 1)
-        container.grid_columnconfigure(0, weight = 1)
-  
+        container.pack(side="top", fill="both", expand=True) 
+
         self.frames = {}  
-  
-        for F in (StartPage, PageOne, PageTwo):
-  
+        
+        self.bind('<Key>', self.shortcut_pressed)
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        for F in (StartPage,):
             frame = F(container, self)
-  
             self.frames[F] = frame 
-  
-            frame.pack()
+            frame.grid(row=0, column=0, sticky="nsew")
   
         self.show_frame(StartPage)
+
+    def show_frame(self, cont):
+        frame = self.frames[cont]
+        frame.tkraise()
+
+    def get_screen_width(self):
+        return self.screen_width
     
-    def import_jff(self):
+    def set_screen_width(self, width):
+        self.screen_width = width
+
+    def get_screen_height(self):
+        return self.screen_height
+    
+    def set_screen_height(self, height):
+        self.screen_height = height
+
+    def open_jff(self):
         self.filename = filedialog.askopenfilename()
         state_dict = jf.parse_xml(self.filename)
+        self.opened_file = self.filename
         
         for state in state_dict:
             self.frames[StartPage].screen.index += 1
             self.frames[StartPage].screen.states.append(tela.StatesManager(int(state_dict[state]['x']), int(state_dict[state]['y']), int(state)))
   
-    def export_jff(self):
+    def save_as_jff(self):
         automaton = {}
         
-        for e, state in enumerate(self.frames[StartPage].screen.states):
-            automaton[e] = {'name': state.state_name, 'initial': False, 'final': False, 'x': state.x, 'y': state.y}
-           
-        jf.write_xml(automaton, 'test.jff')
+        filename = filedialog.asksaveasfilename(defaultextension=".jff", filetypes=[("JFLAP files", "*.jff"), ("All files", "*.*")])
+        if filename:
+            for e, state in enumerate(self.frames[StartPage].screen.states):
+                automaton[e] = {'name': state.state_name, 'initial': False, 'final': False, 'x': state.x, 'y': state.y}
+                
+            jf.write_xml(automaton, filename)
+            self.opened_file = filename
+  
+    def save(self):
+        if self.opened_file == "":
+            print("Save as first")
+            self.save_as_jff()
+        else:
+            print("Saving...")
+            automaton = {}
+            for e, state in enumerate(self.frames[StartPage].screen.states):
+                automaton[e] = {'name': state.state_name, 'initial': False, 'final': False, 'x': state.x, 'y': state.y}
+                
+            jf.write_xml(automaton, self.opened_file)
+  
+    def new(self, screen_width, screen_height):
+        self.flag_new = True
+        
+    def export_jpg(self):
+        img = pygame.Surface((self.screen_width, self.screen_height))
+        img.blit(self.frames[StartPage].screen.screen, (0, 0))
+        filename = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("Image files", "*.png"), ("All files", "*.*")])
+        pygame.image.save(img, filename)
   
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
     
+    def shortcut_pressed(self, event):
+        if event.keysym == 's' and event.state & 4:  
+            self.save()
+        elif event.keysym == 's' and event.state & 1 and event.state & 4:
+            self.save_as_jff()
+        elif event.keysym == 'n' and event.state & 4:
+            self.new(self.screen_width, self.screen_height)
+        elif event.keysym == 'o' and event.state & 4:
+            self.open_jff()
+    
+    def on_closing(self):
+        if messagebox.askyesno("Salvar alterações", "Deseja salvar as alterações antes de fechar?"):
+            self.save()
+            
+        pygame.quit()
+        self.destroy()
+        self.running = False
+    
     def run(self):
-        while True:
-            self.frames[StartPage].screen.running()
+        while self.running:
+            if not self.flag_new:
+                self.frames[StartPage].screen.running()
+            else:
+                pygame.quit()
+                self.frames[StartPage].screen = tela.Screen(self.screen_width, self.screen_height)
+                self.flag_new = False
+                
             self.update()
-        
+
 class StartPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
-        label = ctk.CTkLabel(self, text ="Start Page", font = LARGEFONT)
-        label.grid(row = 0, column = 1, columnspan = 2)
         
-        # Configure row weights for better layout
-        self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
-        self.rowconfigure(2, weight=4)
+        screen_width = 40
+        screen_height = 691
+
+        self.label_side_bar = ctk.CTkLabel(self, width=screen_width, height=screen_height, text="")
+        self.label_side_bar.grid(row=0, column=0)
         
-        # Configure column weights for better layout
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=1)
-
-        # Add more buttons
-        button1 = ctk.CTkButton(self, text="Importar arquivo", command=lambda: controller.import_jff())
-        button1.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-
-        button2 = ctk.CTkButton(self, text="Exportar arquivo", command=lambda: controller.export_jff())
-        button2.grid(row=1, column=1, padx=10, pady=5)
-
-        button3 = ctk.CTkButton(self, text="New Button 3", command=lambda: print("Button 3 clicked"))
-        button3.grid(row=1, column=2, padx=10, pady=5, sticky="e")
-
-        # Reposition existing buttons
-        button1.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        button2.grid(row=1, column=1, padx=10, pady=5)
-        button3.grid(row=1, column=2, padx=10, pady=5, sticky="e")
-
-        # Reposition the pygame label
         self.pygamelabel = tk.Label(self, width=int(controller.screen_width*2), height=int(controller.screen_height*0.07), text="")
         os.environ['SDL_WINDOWID'] = str(self.pygamelabel.winfo_id())
         os.environ['SDL_VIDEODRIVER'] = 'windib'
-        self.pygamelabel.grid(row=2, column=0, columnspan=3, padx=10, pady=10)
-        self.screen = tela.Screen(720, 480)
+        self.pygamelabel.grid(row=0, column=1, columnspan=3, padx=10, sticky="nsew")
+        self.screen = tela.Screen(screen_width, screen_height)
+        
+        button_width = 20
+        button_height = 20
 
+        self.label_txt = ctk.CTkLabel(self.label_side_bar, text="Editor", height= button_height, width= button_width, font=("Helvetica", 12),anchor="e")
+        self.label_txt.place(relx=0.1, rely=0.05, anchor="w")
 
-class PageOne(ctk.CTkFrame):
-    def __init__(self, parent, controller):
-        ctk.CTkFrame.__init__(self, parent)
-        label = ctk.CTkLabel(self, text ="Page One", font = LARGEFONT)
-        label.pack(pady = 10, padx = 10)
-  
-        button = ctk.CTkButton(self, text ="Go to Page 1", command = lambda : controller.show_frame(PageOne))
-        button.pack()
-  
-        button2 = ctk.CTkButton(self, text ="Go to Page 2", command= lambda : controller.show_frame(PageTwo))
-        button2.pack()
+        icon_edition = tk.PhotoImage(file="Imagens/20240322_203742.png")
+        icon_edition = icon_edition.subsample(2, 2)
+        self.Button_attribute_edition = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
+                                                      fg_color="transparent", image=icon_edition, compound="right")
+        self.Button_attribute_edition.place(relx=0.03, rely=0.13, anchor="w")
         
-class PageTwo(ctk.CTkFrame):
-    def __init__(self, parent, controller):
-        ctk.CTkFrame.__init__(self, parent)
-        label = ctk.CTkLabel(self, text ="Page Two", font = LARGEFONT)
-        label.pack(pady = 10, padx = 10)
+        icon_state_creator = tk.PhotoImage(file="Imagens/20240322_210027.png")
+        icon_state_creator = icon_state_creator.subsample(2, 2)
+        self.Button_state_creator = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
+                                                      fg_color="transparent", image=icon_state_creator, compound="right")
+        self.Button_state_creator.place(relx=0, rely=0.23, anchor="w")
         
-        button = ctk.CTkButton(self, text ="Go to Page 1", command = lambda : controller.show_frame(StartPage))
+        icon_transition_creator = tk.PhotoImage(file="Imagens/20240322_210202.png")
+        icon_transition_creator = icon_transition_creator.subsample(2, 2)
+        self.Button_transition_creator = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
+                                                      fg_color="transparent", image=icon_transition_creator, compound="right")
+        self.Button_transition_creator.place(relx=0, rely=0.33, anchor="w")
         
-        button.pack()
+        icon_deleter = tk.PhotoImage(file="Imagens/20240322_193952.png")
+        imagem_reduzida = icon_deleter.subsample(2, 2)
+        self.Button_deleter = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, fg_color="transparent", 
+                                            image=imagem_reduzida, compound="left")
+        self.Button_deleter.place(relx=0.03, rely=0.43, anchor="w")
         
-        button2 = ctk.CTkButton(self, text ="Go to Page 2", command= lambda : controller.show_frame(PageTwo))
+        icon_undoer = tk.PhotoImage(file="Imagens/20240322_210234.png")
+        icon_undoer = icon_undoer.subsample(2, 2)
+        self.Button_undoer = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
+                                                      fg_color="transparent", image=icon_undoer, compound="right")
+        self.Button_undoer.place(relx=0, rely=0.53, anchor="w")
         
-        button2.pack()
+        
+        icon_remake = tk.PhotoImage(file="Imagens/20240322_211523.png")
+        icon_remake = icon_remake.subsample(2, 2)
+        self.Button_remake = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
+                                                      fg_color="transparent", image=icon_remake, compound="right")
+        self.Button_remake.place(relx=0, rely=0.63, anchor="w")
 
 app = App()
 app.run()
