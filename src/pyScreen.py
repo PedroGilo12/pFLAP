@@ -31,7 +31,7 @@ class App(ctk.CTk):
         print("Screen size: ", self.screen_width, "x", self.screen_height)
         
         self.geometry(f"{self.screen_width}x{self.screen_height}")
-        self.resizable(True, True)
+        self.resizable(False, False)
 
         menu = CTkMenuBar(self)
         button_1 = menu.add_cascade("File")
@@ -95,15 +95,35 @@ class App(ctk.CTk):
         
         for state in state_dict:
             self.frames[StartPage].screen.index += 1
-            self.frames[StartPage].screen.states.append(tela.StatesManager(int(state_dict[state]['x']), int(state_dict[state]['y']), int(state)))
-  
+            initial = bool(state_dict[state]['initial'])
+            final = bool(state_dict[state]['final'])
+            print(f"State: {state_dict[state]['name']} initial: {type(initial)} final: {type(final)}")
+            self.frames[StartPage].screen.states.append(tela.StatesManager(int(state_dict[state]['x']), int(state_dict[state]['y']), int(state), initial, final))
+
+        for state in self.frames[StartPage].screen.states:
+            for state2 in state_dict:
+                if state.state_name == f"q{int(state2) + 1}":
+                    print(f'from: {state.state_name} ')
+                    
+                    for transition in state_dict[state2]['transitions']:
+                        for state3 in self.frames[StartPage].screen.states:
+                            if state3.state_name == f"q{int(transition['to']) + 1}":
+                                print(f'to: {state3.state_name}')
+                                state.add_transition(state3, transition['read'])
+                    
     def save_as_jff(self):
         automaton = {}
         
         filename = filedialog.asksaveasfilename(defaultextension=".jff", filetypes=[("JFLAP files", "*.jff"), ("All files", "*.*")])
         if filename:
             for e, state in enumerate(self.frames[StartPage].screen.states):
-                automaton[e] = {'name': state.state_name, 'initial': False, 'final': False, 'x': state.x, 'y': state.y}
+                transition_list = []
+                for transition in state.transition_list:
+                    transition_list.append({'to': transition[0].state_name, 'read': transition[1]})
+                
+                print(transition_list)
+                
+                automaton[e] = {'name': state.state_name, 'initial': state.initial, 'final': state.final, 'x': state.x, 'y': state.y, 'transitions': transition_list}
                 
             jf.write_xml(automaton, filename)
             self.opened_file = filename
@@ -187,25 +207,25 @@ class StartPage(ctk.CTkFrame):
         icon_edition = tk.PhotoImage(file="Imagens/20240322_203742.png")
         icon_edition = icon_edition.subsample(2, 2)
         self.Button_attribute_edition = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
-                                                      fg_color="transparent", image=icon_edition, compound="right")
+                                                      fg_color="transparent", image=icon_edition, compound="right", command=self.select)
         self.Button_attribute_edition.place(relx=0.03, rely=0.13, anchor="w")
         
         icon_state_creator = tk.PhotoImage(file="Imagens/20240322_210027.png")
         icon_state_creator = icon_state_creator.subsample(2, 2)
         self.Button_state_creator = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
-                                                      fg_color="transparent", image=icon_state_creator, compound="right")
+                                                      fg_color="transparent", image=icon_state_creator, compound="right", command= self.add_option)
         self.Button_state_creator.place(relx=0, rely=0.23, anchor="w")
         
         icon_transition_creator = tk.PhotoImage(file="Imagens/20240322_210202.png")
         icon_transition_creator = icon_transition_creator.subsample(2, 2)
         self.Button_transition_creator = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
-                                                      fg_color="transparent", image=icon_transition_creator, compound="right")
+                                                      fg_color="transparent", image=icon_transition_creator, compound="right", command=self.make_transition)
         self.Button_transition_creator.place(relx=0, rely=0.33, anchor="w")
         
         icon_deleter = tk.PhotoImage(file="Imagens/20240322_193952.png")
         imagem_reduzida = icon_deleter.subsample(2, 2)
         self.Button_deleter = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, fg_color="transparent", 
-                                            image=imagem_reduzida, compound="left")
+                                            image=imagem_reduzida, compound="left", command=self.remove_option)
         self.Button_deleter.place(relx=0.03, rely=0.43, anchor="w")
         
         icon_undoer = tk.PhotoImage(file="Imagens/20240322_210234.png")
@@ -214,12 +234,26 @@ class StartPage(ctk.CTkFrame):
                                                       fg_color="transparent", image=icon_undoer, compound="right")
         self.Button_undoer.place(relx=0, rely=0.53, anchor="w")
         
-        
         icon_remake = tk.PhotoImage(file="Imagens/20240322_211523.png")
         icon_remake = icon_remake.subsample(2, 2)
         self.Button_remake = ctk.CTkButton(self.label_side_bar, text="", height= button_height, width= button_width, 
                                                       fg_color="transparent", image=icon_remake, compound="right")
         self.Button_remake.place(relx=0, rely=0.63, anchor="w")
+        
+    def remove_option(self):
+        self.screen.action = "Excluir Estado"
+    
+    def add_option(self):
+        self.screen.action = "Criar Estado"
+        
+    def make_transition(self):
+        self.screen.action = "Criar Transição"
+        
+    def select_state(self):
+        self.screen.action = "Selecionar Estado"
+        
+    def select(self):
+        self.screen.action = "Selecionar"
 
 app = App()
 app.run()
