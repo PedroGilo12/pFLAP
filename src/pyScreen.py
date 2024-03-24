@@ -20,45 +20,57 @@ class MultipleRunScreen(tk.Toplevel):
         self.geometry("600x828+1149+143")
         self.configure(bg="#333333")
 
-        self.label_input = tk.Label(self, text="Input", bg="#C0C0C0", fg="black", width=53, borderwidth=1, relief="solid")
-        self.label_input.place(relx=0.2, rely=0, anchor="n")
+        self.input_label = tk.Label(self, text="Input", bg="#C0C0C0", fg="black", width=53, borderwidth=1, relief="solid")
+        self.input_label.place(relx=0.2, rely=0, anchor="n")
 
-        self.label_output = tk.Label(self, text="Output", bg="#C0C0C0", fg="black", width=53, borderwidth=1, relief="solid")
-        self.label_output.place(relx=0.8, rely=0, anchor="n")
+        self.output_label = tk.Label(self, text="Output", bg="#C0C0C0", fg="black", width=53, borderwidth=1, relief="solid")
+        self.output_label.place(relx=0.8, rely=0, anchor="n")
         
-        self.button_close = tk.Button(self, text="X", bg="red", fg="white", command=self.fechar_tela)
-        self.button_close.place(relx=1, rely=0.012, anchor="e")
+        self.close_button = tk.Button(self, text="X", bg="red", fg="white", command=self.close_window)
+        self.close_button.place(relx=1, rely=0.012, anchor="e")
 
-        self.button_run = tk.Button(self, text="Run", bg="green", fg="white", command=self.get_entradas)
-        self.button_run.place(relx=0.5, rely=0.95, anchor="s")
+        self.run_button = tk.Button(self, text="Run", bg="#696969", fg="white", command=self.show_results, width=20, font= ("Verdana", 12))
+        self.run_button.place(relx=0.5, rely=0.995, anchor="s")
 
-        self.entradas = []
+        self.inputs = []
+        self.result_labels = []
 
-        self.adicionar_line_edit()
-        self.bind('<Return>', self.adicionar_line_edit)
+        self.add_entry()
+        self.bind('<Return>', self.add_entry)
 
-    def fechar_tela(self):
+    def close_window(self):
         self.destroy()
 
-    def adicionar_line_edit(self, event=None):
-        if len(self.entradas) >= 37:
-            # Se já houver 37 entradas, não faça nada
+    def add_entry(self, event=None):
+        if len(self.inputs) >= 37:
             return
 
-        if self.entradas:
-            last_entry = self.entradas[-1]
+        if self.inputs:
+            last_entry = self.inputs[-1]
             place_info = last_entry.place_info()
             x = place_info['relx']
             y = place_info['rely']
-            nova_entrada = tk.Entry(self, width=48)
-            nova_entrada.place(relx=float(x), rely=float(y) + 0.025, anchor="nw")
-        else:
-            nova_entrada = tk.Entry(self, width=48)
-            nova_entrada.place(relx=0.001, rely=0.023, anchor="nw")
-        self.entradas.append(nova_entrada)
+            new_entry = tk.Entry(self, width=48)
+            new_entry.place(relx=float(x), rely=float(y) + 0.025, anchor="nw")
 
-    def get_entradas(self):
-        return [entry.get() for entry in self.entradas]
+            result_label = tk.Label(self, width=43,  bg="white", height=0, relief="solid", highlightthickness=0, highlightbackground="gray")
+            result_label.place(relx=0.49, rely=(float(y)-0.001) + 0.025, anchor="nw")
+        else:
+            new_entry = tk.Entry(self, width=48)
+            new_entry.place(relx=0.001, rely=0.024, anchor="nw")
+            
+            result_label = tk.Label(self, width=43, bg="white", height=0, relief="solid", highlightthickness=0)
+            result_label.place(relx=0.49, rely=0.023, anchor="nw")
+        self.inputs.append(new_entry)
+        self.result_labels.append(result_label)
+
+    def show_results(self):
+        results = self.get_entries()
+        for result, result_label in zip(results, self.result_labels):
+            result_label.config(text=result)
+
+    def get_entries(self):
+        return [entry.get() for entry in self.inputs]
 
 class App(ctk.CTk):
      
