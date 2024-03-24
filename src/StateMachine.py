@@ -5,23 +5,23 @@ import time
 final_states = []
 
 class State:
-    _name = ""
-    _elements : list[tuple[str, str]] = []
+    name = ""
+    elements : list[tuple[str, str]] = []
 
     def __init__(self, name, elements):
-        self._name = name
-        self._elements = elements
+        self.name = name
+        self.elements = elements
         
     def get_name(self):
-        return self._name
+        return self.name
 
     def get_elements(self):
-        return self._elements
+        return self.elements
     
     def process(self, signal):
         output_states = []
         
-        for element in self._elements:
+        for element in self.elements:
             if element[1] == signal:
                 output_states.append(element[2])
 

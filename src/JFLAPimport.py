@@ -51,7 +51,7 @@ def write_xml(automaton, output_file):
             for transition in state_data['transitions']:
                 transition_element = ET.SubElement(automaton_element, 'transition')
                 from_element = ET.SubElement(transition_element, 'from')
-                from_element.text = state_id
+                from_element.text = str(state_id)
                 to_element = ET.SubElement(transition_element, 'to')
                 to_element.text = transition['to']
                 read_element = ET.SubElement(transition_element, 'read')

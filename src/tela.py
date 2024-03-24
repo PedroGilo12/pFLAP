@@ -158,3 +158,7 @@ class Screen():
         else:
             print(self.current_select_state.transition_list)
             self.current_select_state = None
+            
+    def zoom_in(self):
+        for state in self.states:
+            state.zoom(1.1)

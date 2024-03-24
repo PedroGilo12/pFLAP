@@ -10,6 +10,9 @@ class StatesManager:
         self.final = final
         self.state_name = f"q{index + 1}"
         self.transition_list = []
+        
+        # Escala inicial
+        self.scale = 1.0
 
     def draw(self, screen):
         for transition in self.transition_list:
@@ -23,12 +26,17 @@ class StatesManager:
         else:
             line_width = 2
         
-        pygame.draw.circle(screen, (255, 255, 153), (self.x, self.y), self.radius)
-        pygame.draw.circle(screen, (0, 0, 0), (self.x, self.y), self.radius, line_width)
+        # Ajusta as coordenadas de acordo com a escala
+        scaled_x = int(self.x * self.scale)
+        scaled_y = int(self.y * self.scale)
+        scaled_radius = int(self.radius * self.scale)
+        
+        pygame.draw.circle(screen, (255, 255, 153), (scaled_x, scaled_y), scaled_radius)
+        pygame.draw.circle(screen, (0, 0, 0), (scaled_x, scaled_y), scaled_radius, line_width)
         
         font = pygame.font.Font(None, 20)
         text = font.render(self.state_name, True, (0, 0, 0))
-        text_rect = text.get_rect(center=(self.x, self.y))
+        text_rect = text.get_rect(center=(scaled_x, scaled_y))
         screen.blit(text, text_rect)
         
     def draw_arrows(self, screen, x1, y1, x2, y2, symbol, cor_linha=(0, 0, 0), comprimento_ponta=50, largura_ponta=8):
@@ -67,7 +75,6 @@ class StatesManager:
         texto_rect = texto.get_rect(center=(x1 + 10, y1 + 10))
         screen.blit(texto, texto_rect)
 
-
     def add_transition(self, state, symbol):
         print("Adicionando transição para ", self.state_name)
         self.transition_list.append([state, symbol])
@@ -75,3 +82,6 @@ class StatesManager:
     def is_too_close(self, other_circle):
         distance_squared = (self.x - other_circle.x) ** 2 + (self.y - other_circle.y) ** 2
         return distance_squared < (2 * self.radius) ** 2
+
+    def zoom(self, zoom_factor):
+        self.scale *= zoom_factor

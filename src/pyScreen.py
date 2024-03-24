@@ -9,6 +9,8 @@ import tela
 import JFLAPimport as jf
 from CTkMenuBar import *
 from tkinter import messagebox
+import StateMachine as sm
+import StatesManager as smgr
 
 LARGEFONT =("Verdana", 35)
 
@@ -50,7 +52,7 @@ class App(ctk.CTk):
         sub_menu.add_option(option=".PNG",command=lambda: self.export_jpg())
 
         dropdown2 = CustomDropdownMenu(widget=button_2)
-        dropdown2.add_option(option="Multiple Run",command=lambda: print("Open"))
+        dropdown2.add_option(option="Multiple Run",command=lambda: self.simulation())
         dropdown2.add_option(option="Step by Step",command=lambda: print("Open"))
 
         dropdown3 = CustomDropdownMenu(widget=button_3)
@@ -110,6 +112,33 @@ class App(ctk.CTk):
                             if state3.state_name == f"q{int(transition['to']) + 1}":
                                 print(f'to: {state3.state_name}')
                                 state.add_transition(state3, transition['read'])
+        
+    def convert_jff_to_fsm(self, jff: list[smgr.StatesManager]):
+        fsm: dict[str, sm.State] = {}
+        
+        for state in jff:
+            transition_list = []
+            for transition in state.transition_list:
+                transition_list.append(tuple((state.state_name, transition[1], transition[0].state_name)))
+            
+            fsm[state.state_name] = sm.State(state.state_name, transition_list)
+        
+            print(f"{fsm[state.state_name].name}: {fsm[state.state_name].elements}")
+        
+        return fsm
+            
+    def simulation(self):
+        states = self.convert_jff_to_fsm(self.frames[StartPage].screen.states)
+        print(states)
+        
+        machine = sm.FiniteStateMachine(states, states["q1"], ["q3"])
+        
+        signals = list("aa")
+
+        for signal in signals:
+            machine.process_symbol(signal)
+            
+        print(machine.result())
                     
     def save_as_jff(self):
         automaton = {}
@@ -162,6 +191,9 @@ class App(ctk.CTk):
             self.new(self.screen_width, self.screen_height)
         elif event.keysym == 'o' and event.state & 4:
             self.open_jff()
+        elif event.keysym == 'p' and event.state & 4:
+            print("zoom in")
+            self.frames[StartPage].screen.zoom_in()
     
     def on_closing(self):
         if messagebox.askyesno("Salvar alterações", "Deseja salvar as alterações antes de fechar?"):
