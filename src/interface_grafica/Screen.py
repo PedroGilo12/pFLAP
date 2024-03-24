@@ -60,7 +60,13 @@ class Screen:
                 pygame.quit()
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:  # Botão direito do mouse
-                pass
+                x, y = pygame.mouse.get_pos()
+                for state in self.states:
+                    if (x - state.x) ** 2 + (y - state.y) ** 2 <= state.radius ** 2:
+                        if self.initial_exists():
+                            print("já existe um estado inicial")
+                        else:
+                            state.set_inicial(True)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Botão esquerdo do mouse
                 if self.button_bar.button_area_rect.collidepoint(mouse_x, mouse_y):
                     for rect, _, _ in self.button_bar.buttons:
@@ -164,3 +170,10 @@ class Screen:
                     self.origin_state = None
                     self.destination_state = None
                     self.flag = "0"
+
+    def initial_exists(self):
+        for state in self.states:
+            if state.initial:
+                return True
+        return False
+

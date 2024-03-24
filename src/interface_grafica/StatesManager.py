@@ -11,6 +11,15 @@ class StatesManager:
         self.state_name = f"q{index + 1}"
         self.transition_list = []
 
+
+    ############ SETTERS ############
+    def set_initial(self, boolean):
+        self.initial = boolean
+
+    def set_final(self, boolean):
+        self.final = boolean
+    #################################
+
     def draw(self, screen):
         for transition in self.transition_list:
             if self.x == transition[0].x and self.y == transition[0].y:
