@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 import customtkinter as ctk
-import pyGameGenericFSM as p
 from customtkinter import filedialog
 import os
 import pygame
@@ -11,6 +10,55 @@ from CTkMenuBar import *
 from tkinter import messagebox
 
 LARGEFONT =("Verdana", 35)
+
+class MultipleRunScreen(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+
+        self.overrideredirect(True)
+        self.geometry("600x828+1149+143")
+        self.configure(bg="#333333")
+
+        self.label_input = tk.Label(self, text="Input", bg="#C0C0C0", fg="black", width=53, borderwidth=1, relief="solid")
+        self.label_input.place(relx=0.2, rely=0, anchor="n")
+
+        self.label_output = tk.Label(self, text="Output", bg="#C0C0C0", fg="black", width=53, borderwidth=1, relief="solid")
+        self.label_output.place(relx=0.8, rely=0, anchor="n")
+        
+        self.button_close = tk.Button(self, text="X", bg="red", fg="white", command=self.fechar_tela)
+        self.button_close.place(relx=1, rely=0.012, anchor="e")
+
+        self.button_run = tk.Button(self, text="Run", bg="green", fg="white", command=self.get_entradas)
+        self.button_run.place(relx=0.5, rely=0.95, anchor="s")
+
+        self.entradas = []
+
+        self.adicionar_line_edit()
+        self.bind('<Return>', self.adicionar_line_edit)
+
+    def fechar_tela(self):
+        self.destroy()
+
+    def adicionar_line_edit(self, event=None):
+        if len(self.entradas) >= 37:
+            # Se já houver 37 entradas, não faça nada
+            return
+
+        if self.entradas:
+            last_entry = self.entradas[-1]
+            place_info = last_entry.place_info()
+            x = place_info['relx']
+            y = place_info['rely']
+            nova_entrada = tk.Entry(self, width=48)
+            nova_entrada.place(relx=float(x), rely=float(y) + 0.025, anchor="nw")
+        else:
+            nova_entrada = tk.Entry(self, width=48)
+            nova_entrada.place(relx=0.001, rely=0.023, anchor="nw")
+        self.entradas.append(nova_entrada)
+
+    def get_entradas(self):
+        return [entry.get() for entry in self.entradas]
 
 class App(ctk.CTk):
      
@@ -30,7 +78,11 @@ class App(ctk.CTk):
         
         print("Screen size: ", self.screen_width, "x", self.screen_height)
         
-        self.geometry(f"{self.screen_width}x{self.screen_height}")
+        self.x = (self.screen_width // 2) - (self.screen_width//3)
+        self.y = (self.screen_height // 2) - (self.screen_height//2.5)
+
+
+        self.geometry(f"{self.screen_width}x{self.screen_height}+{self.x}+{self.y}")
         self.resizable(True, True)
 
         menu = CTkMenuBar(self)
@@ -50,8 +102,8 @@ class App(ctk.CTk):
         sub_menu.add_option(option=".PNG",command=lambda: self.export_jpg())
 
         dropdown2 = CustomDropdownMenu(widget=button_2)
-        dropdown2.add_option(option="Multiple Run",command=lambda: print("Open"))
-        dropdown2.add_option(option="Step by Step",command=lambda: print("Open"))
+        dropdown2.add_option(option="Multiple Run",command=lambda: self.multiple_run())
+        dropdown2.add_option(option="Step by Step",command=lambda: self.Step_by_Step())
 
         dropdown3 = CustomDropdownMenu(widget=button_3)
         dropdown3.add_option(option="Help", command=lambda: print("Open"))
@@ -87,6 +139,16 @@ class App(ctk.CTk):
     
     def set_screen_height(self, height):
         self.screen_height = height
+
+    def multiple_run(self):
+        multiple_run_screen = MultipleRunScreen(self)
+        entradas = multiple_run_screen.get_entradas()
+        print(entradas)
+
+    def Step_by_Step(self):
+        input = ctk.CTkInputDialog(text= "Enter your test", title= "Step by step")
+        input = input.get_input()
+        print(input)
 
     def open_jff(self):
         self.filename = filedialog.askopenfilename()
@@ -161,7 +223,7 @@ class App(ctk.CTk):
                 self.flag_new = False
                 
             self.update()
-
+    
 class StartPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         ctk.CTkFrame.__init__(self, parent)
