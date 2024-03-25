@@ -422,7 +422,7 @@ class StartPage(ctk.CTkFrame):
         self.previous_step_label = ctk.CTkLabel(sbs_screen, text=f"", width=int(self.controller.screen_width * 0.21), height=int(self.controller.screen_height/2))
         self.previous_step_label.grid(row=0, column=1, padx=self.controller.screen_width * 0.00555, pady=self.controller.screen_height * 0.00555, sticky="nsew")
         
-        self.current_step_label = ctk.CTkLabel(sbs_screen, text=f"Current State : {self.controller.machine.get_state()}", width=int(self.controller.screen_width* 0.21), height=int(self.controller.screen_height/3), bg_color="green", corner_radius=0.1)
+        self.current_step_label = ctk.CTkLabel(sbs_screen, text=f"Current State : {self.controller.machine.get_state()}", width=int(self.controller.screen_width* 0.21), height=int(self.controller.screen_height/3), bg_color="gray", corner_radius=0.1)
         self.current_step_label.grid(row=0, column=2, padx=self.controller.screen_width * 0.00555, pady=self.controller.screen_height * 0.00555, sticky="nsew")
         
         self.step_list = clb.CTkListbox(sbs_screen, command= self.update_step)
@@ -438,22 +438,29 @@ class StartPage(ctk.CTkFrame):
 
     def add_step(self):
         if self.simulation_index < len(self.text_by_symbol):
-            previous_state = self.controller.machine.get_state()
+            self.previous_state = self.controller.machine.get_state()
             
             self.controller.machine.process_symbol(self.text_by_symbol[self.simulation_index])
-            current_state = self.controller.machine.get_state()
+            self.current_state = self.controller.machine.get_state()
             
-            self.step_listt[f"Step {self.simulation_index}"] = [previous_state, current_state, self.simulation_index]
+            self.step_listt[f"Step {self.simulation_index}"] = [self.previous_state, self.current_state, self.simulation_index]
             self.step_list.insert("end", f"Step {self.simulation_index}")
             self.update_step(f"Step {self.simulation_index}")
             self.simulation_index = self.simulation_index + 1
+        else:
+            if any(self.controller.machine.result()):
+                self.current_step_label.configure(bg_color="green")
+                self.current_step_label.configure(text="Accepted!!")
+            else:
+                self.current_step_label.configure(bg_color="red")
+                self.current_step_label.configure(text="Rejected!!")
     
     def update_step(self, text):
         att_list = self.step_listt[text]
         if att_list[1] == "undefined":
             self.current_step_label.configure(bg_color="red")
         else:
-            self.current_step_label.configure(bg_color="green")
+            self.current_step_label.configure(bg_color="gray")
             
         if att_list[0] == "undefined":
             self.previous_step_label.configure(bg_color="red")
