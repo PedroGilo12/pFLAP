@@ -1,4 +1,4 @@
-import pySub
+import src.pySub as pySub
 import queue
 import time
 
@@ -55,6 +55,9 @@ class StateMachine:
     def get_state(self):
         return self._current_state
     
+    def get_current_state_name(self):
+        return self._current_state.get_name()
+    
     def run(self):
 
         while True:
@@ -104,8 +107,11 @@ class FiniteStateMachine:
     def process_symbol(self, symbol):
         print(f"Symbol: {symbol}")
         self._topic.publish(symbol)
-        time.sleep(0.5)
+        time.sleep(0.1)
         
     def result(self):
         self._topic.stop_all_subscribers()
         return self._end
+    
+    def get_state(self):
+        return self.machine.get_current_state_name()
