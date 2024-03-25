@@ -1,0 +1,6 @@
+/venv/
+*.pyc
+src/pyGameGenericFSM.py
+src/tkinterWindow.py
+dist/
+build/
