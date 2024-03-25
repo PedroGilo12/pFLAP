@@ -14,11 +14,25 @@ class StatesManager:
         self.scale = 1
 
     def draw(self, screen):
+        list_of_transitions_marked = {}
+        
         for transition in self.transition_list:
-            if self.x == transition[0].x and self.y == transition[0].y:
-                self.draw_return_arrow(screen, self.x, self.y, (0,0,0),self.radius, C= self.radius+10, symbol= transition[1])
+            initial_offset = 50
+            if transition[0] in list_of_transitions_marked:
+                list_of_transitions_marked[transition[0]] = list_of_transitions_marked[transition[0]] + 1
+                initial_offset = 50 * list_of_transitions_marked[transition[0]]
             else:
-                self.draw_arrow(screen, (0,0,0), (self.x, self.y), (transition[0].x, transition[0].y), width=4, symbol= transition[1], offset_arrow=self.radius)
+                list_of_transitions_marked[transition[0]] = 1
+                
+            if self.x == transition[0].x and self.y == transition[0].y:
+                self.draw_curve(screen, (self.x - (self.radius * 0.5), self.y), (transition[0].x + (self.radius * 0.5), transition[0].y), offset=100 + initial_offset,signal=-1, symbol= transition[1])
+            else:
+                if transition[0].x < self.x:
+                    #self.draw_arrow(screen, (0,0,0), (self.x, self.y), (transition[0].x, transition[0].y), width=4, symbol= transition[1], offset_arrow=self.radius)
+                    self.draw_curve(screen, (self.x, self.y), (transition[0].x, transition[0].y), offset=initial_offset, signal=-1,symbol= transition[1])
+                else:
+                    self.draw_curve(screen, (self.x, self.y), (transition[0].x, transition[0].y), offset=initial_offset, signal=1, symbol= transition[1])
+
 
         if self.final:
             line_width = 4
@@ -73,6 +87,45 @@ class StatesManager:
         
         screen.blit(rotated_x, text_rect)
 
+    def angle_degree(self, p1, p2):
+        return math.degrees(math.atan2(p2[1] - p1[1], p2[0] - p1[0]))
+
+    def draw_curve(self, window, p0, p2, offset, signal,symbol):
+        if signal > 0:
+            p1 = ((p0[0] + p2[0]) // 2, ((p0[1] + p2[1]) // 2) + offset)
+        else:
+            p1 = ((p0[0] + p2[0]) // 2, ((p0[1] + p2[1]) // 2) - offset)
+
+        angle_deg = self.angle_degree(p1, p2)
+
+        curve_points = []
+        for t in range(0, 1000):
+            t /= 1000.0
+            x = int((1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t ** 2 * p2[0])
+            y = int((1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t ** 2 * p2[1])
+            curve_points.append((x, y))
+            pygame.draw.circle(window, (0,0,0), (x, y), 1)
+
+        distance = math.sqrt((p2[0] - p0[0]) ** 2 + (p2[1] - p0[1]) ** 2)
+        
+        N = 900
+        
+        fonte = pygame.font.Font(None, 30)
+        texto = fonte.render(symbol, True, (0, 0, 0))
+        texto_rect = texto.get_rect(center=(curve_points[500][0], curve_points[500][1] + 12))
+        window.blit(texto, texto_rect)
+
+        n = min(len(curve_points) - 1, 1000 - (1000 - distance)*0.2)
+        intermediate_point = curve_points[int(n)]
+
+        arrow_length = 20
+        arrow_end = (intermediate_point[0] + arrow_length * math.cos(math.radians(angle_deg)),
+                    intermediate_point[1] + arrow_length * math.sin(math.radians(angle_deg)))
+        pygame.draw.polygon(window, (0, 0, 0), (((arrow_end[0] + 10 * math.cos(math.radians(angle_deg + 135))),
+                                            arrow_end[1] + 10 * math.sin(math.radians(angle_deg + 135))),
+                                            (arrow_end[0] + 10 * math.cos(math.radians(angle_deg - 135)),
+                                            arrow_end[1] + 10 * math.sin(math.radians(angle_deg - 135))),
+                                            arrow_end))
 
     def draw_triangle(self, screen, x, y):
         x3 = x + 50 * math.cos(math.pi +  math.pi / 6)
