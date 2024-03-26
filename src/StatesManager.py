@@ -1,5 +1,6 @@
 import pygame
 import math
+import time
 
 class StatesManager:
     def __init__(self, x, y, index, initial=False, final=False):
@@ -28,7 +29,6 @@ class StatesManager:
                 self.draw_curve(screen, (self.x - (self.radius * 0.5), self.y), (transition[0].x + (self.radius * 0.5), transition[0].y), offset=100 + initial_offset,signal=-1, symbol= transition[1])
             else:
                 if transition[0].x < self.x:
-                    #self.draw_arrow(screen, (0,0,0), (self.x, self.y), (transition[0].x, transition[0].y), width=4, symbol= transition[1], offset_arrow=self.radius)
                     self.draw_curve(screen, (self.x, self.y), (transition[0].x, transition[0].y), offset=initial_offset, signal=-1,symbol= transition[1])
                 else:
                     self.draw_curve(screen, (self.x, self.y), (transition[0].x, transition[0].y), offset=initial_offset, signal=1, symbol= transition[1])
@@ -114,6 +114,8 @@ class StatesManager:
         texto = fonte.render(symbol, True, (0, 0, 0))
         texto_rect = texto.get_rect(center=(curve_points[500][0], curve_points[500][1] + 12))
         window.blit(texto, texto_rect)
+        
+        #pygame.draw.circle(window, (255, 0, 0), (curve_points[500][0], curve_points[500][1] + 12), 5)
 
         n = min(len(curve_points) - 1, 1000 - (1000 - distance)*0.2)
         intermediate_point = curve_points[int(n)]
@@ -126,7 +128,47 @@ class StatesManager:
                                             (arrow_end[0] + 10 * math.cos(math.radians(angle_deg - 135)),
                                             arrow_end[1] + 10 * math.sin(math.radians(angle_deg - 135))),
                                             arrow_end))
+        
+    def remove_transition(self, pos_mouse):
+        list_of_transitions_marked = {}
+        
+        for transition in self.transition_list:
+            initial_offset = 50
+            if transition[0] in list_of_transitions_marked:
+                list_of_transitions_marked[transition[0]] = list_of_transitions_marked[transition[0]] + 1
+                initial_offset = 50 * list_of_transitions_marked[transition[0]]
+            else:
+                list_of_transitions_marked[transition[0]] = 1
+                
+            if self.x == transition[0].x and self.y == transition[0].y:
+                if self.is_clicked(5,(self.x - (self.radius * 0.5), self.y), (transition[0].x + (self.radius * 0.5), transition[0].y), (pos_mouse[0], pos_mouse[1]), 100 + initial_offset, -1):
+                    self.transition_list.remove(transition)
+            else:
+                if transition[0].x < self.x:
+                    if self.is_clicked(5, (self.x, self.y), (transition[0].x, transition[0].y), (pos_mouse[0], pos_mouse[1]), initial_offset, -1):
+                        self.transition_list.remove(transition)
+                else:
+                    if self.is_clicked(5, (self.x, self.y), (transition[0].x, transition[0].y), (pos_mouse[0], pos_mouse[1]), initial_offset, 1):
+                        self.transition_list.remove(transition)
 
+    def is_clicked(self, limit, p0, p2, p, offset, signal):
+        if signal > 0:
+            p1 = ((p0[0] + p2[0]) // 2, ((p0[1] + p2[1]) // 2) + offset)
+        else:
+            p1 = ((p0[0] + p2[0]) // 2, ((p0[1] + p2[1]) // 2) - offset)
+
+
+        curve_points = []
+        for t in range(0, 1000):
+            t /= 1000.0
+            x = int((1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t ** 2 * p2[0])
+            y = int((1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t ** 2 * p2[1])
+            curve_points.append((x, y))
+
+        distance = math.sqrt((curve_points[500][0] - p[0]) ** 2 + ((curve_points[500][1] + 12) - p[1]) ** 2)
+        
+        return distance <= limit
+            
     def draw_triangle(self, screen, x, y):
         x3 = x + 50 * math.cos(math.pi +  math.pi / 6)
         y3 = y + 50 * math.sin(math.pi + math.pi / 6)
