@@ -171,10 +171,9 @@ class Screen():
             if (x - state.x) ** 2 + (y - state.y) ** 2 <= state.radius ** 2:
                 self.states.remove(state)
             
-            for transition in state.transition_list:
-                if distance_by_point(x, y, state.x, state.y, transition[0].x, transition[0].y):
-                    state.transition_list.remove(transition)
-                    
+            for state in self.states:
+                state.remove_transition(pygame.mouse.get_pos())
+                
     def make_transition(self):
         x, y = pygame.mouse.get_pos()
         for state in self.states:
